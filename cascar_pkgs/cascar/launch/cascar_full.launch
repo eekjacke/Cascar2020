@@ -1,0 +1,12 @@
+<!--
+ Launch file to run the car and estimate pose with dead reckoning.
+ Add rplidar launch.
+-->
+
+
+<launch>
+  <include file="$(find rplidar_ros)/launch/rplidar.launch" />
+  <node name="state_estimator" pkg="cascar" type="state_estimator.py" output="screen"/>
+  <node name="cascar" pkg="cascar" type="cascar_run.py" output="screen" args=""/>
+  <node name="imu" pkg="cascar" type="imu.py" output="screen"/>
+</launch>

@@ -1,0 +1,6 @@
+<!-- launch file to run qualisys -->
+
+<launch>
+  <node pkg="mocap_qualisys" type="mocap_qualisys_node" name="qualisys" output="screen"></node>
+  <param name="qualisys_used" type="bool" value="true"/>
+</launch>

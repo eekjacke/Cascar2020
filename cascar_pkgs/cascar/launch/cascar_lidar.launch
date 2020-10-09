@@ -1,0 +1,10 @@
+<!--
+ Launch file to run the car and rplidar simultaneously
+-->
+
+<launch>
+  <include file="$(find rplidar_ros)/launch/rplidar.launch" />
+  <node name="cascar" pkg="cascar" type="cascar_run.py" output="screen" args="">
+  <param name="log"    type="bool"   value="$(optenv LOG False)"/>
+  </node>  
+</launch>

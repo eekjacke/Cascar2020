@@ -1,0 +1,1 @@
+KERNEL=="js*", ATTRS{name}=="Logitech Logitech Extreme 3D", MODE:="0777", SYMLINK+="joystick"

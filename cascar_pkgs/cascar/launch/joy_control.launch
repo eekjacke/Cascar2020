@@ -1,0 +1,12 @@
+<!--
+ cascar joy control launch
+-->
+
+<launch>
+<node name="joy_node" pkg="joy"  type="joy_node">
+<param name="dev_name" type="string" value="Logitech Logitech Extreme 3D"/>
+<param name="_dev" type="string" value="/dev/joystick"/>
+</node>
+<node name="joy_control" pkg="cascar"  type="cascar_joystick.py" output="screen"/>
+<!--node name="cascar" pkg="cascar"  type="cascar_run.py" output="screen"/-->
+</launch>

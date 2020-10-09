@@ -1,17 +1,8 @@
-# cascar = Control Autonomous Systems CAR
+# REVIEW FOR 2020
 
-> ROS code for controlling the RCCar platform @ Vehicular Systems to be used in 
-> the upcoming course in Learning, Planning, and Control of Autonomous vehicles.
+# Short Manual on CASCAR platform
 
-*This repo should be within your worspace/src folder.*
-
-### UPDATES 2020
-
-Updated library to function with latest release (Noetic) with python3 standard.
-
-Added code to read MPU5060 imu.
-
-Added packages for Qualisys and Rplidar in the repo.
+This document presents some useful procedures and commands to use with the cascar platform.
 
 ## Network
 
@@ -20,52 +11,47 @@ Password: _tsfs12autonom_
 
 Connect to the hotspot with your laptop
 
+Start the provided virtual machine
 
-## ROS master/client configuration
+When you open a terminal window it should automatically set suitable environment variables.
+If it fails, one reason could be network configuration.
+Check IP address inside the VM
 
-For ROS nodes to find each other, some environment variables (```ROS_IP```, ```ROS_MASTER_URI```) should be properly configured to match the used network.
-
-### Master
-
-The master node could be configured by:
 ```bash
-source ~/cascar_ws/src/cascar/develop/conf_scripts/setrosmaster.sh
+hostname -I
 ```
 
-In the script, IP address which is assigned to WiFi interface (```wlan0```) is parsed and inserted into two export commands defining the needed environment variables.
-The master node has enough information to setup all variable by its own.
+It should have an address of type ```192.168.0.X```.
+If it not, try to restart network interface inside VM
 
-One could manually check which IP address is assigned to the master node and configure environment variables on the clients. Or use the provided scripts which work under the assumption that all nodes are located inside one subnetwork, meaning that the nodes could communicate via broadcast messages.
-
-The master runs ```rosmasterip.service```, which gets broadcast messages from clients and replies to them, so they could find out the master IP address. The service is based on a small Python program, ```rosmasterip.py```.
-
-### Client
-
-When ```rosmasterip.service``` is running and the master and the clients are on the same network, each client could set up its environment variables with:
 ```bash
-  source  ~/cascar_ws/src/cascar/develop/conf_scripts/setrosclient.sh
+sudo systemctl restart  NetworkManager.service
 ```
 
-The script runs ```rosclientip.py```  to obtain the master node IP and creates ```envrosip.sh``` with the suitable environment variables, which are later sourced by the script.
+After that
+
+```bash
+source ~/.bashrc
+```
 
 ## Initialize the car
 
 To SSH the car
 
 ```bash
-ssh cascar@$ROS_MASTER_IP
+ssh $ROS_MASTER_IP
 ```
 
 Run one of the lines to initialize the car (```roscore``` would start automatically if it is not running yet)
 
 ```bash
-roslaunch cascar cascar_dead_reck.launch #no lidar
-roslaunch cascar cascar_full.launch #with lidar
+roslaunch cascar cascar.launch no lidar
+roslaunch cascar cascar_lidar.launch with lidar
 ```
 
-## Command line interface
+From inside VM
 
-Run on the client side, it is possible to run it on the master side as well.
+## Command line interface
 
 To see the topics and check that ```/car_command``` topic is available
 

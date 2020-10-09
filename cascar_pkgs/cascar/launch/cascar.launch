@@ -1,0 +1,9 @@
+<!--
+ cascar launch
+-->
+
+<launch>
+  <node name="cascar" pkg="cascar" type="cascar_run.py" output="screen" args="">
+  <param name="log"    type="string"   value="$(optenv LOG)"/>
+  </node>  
+</launch>

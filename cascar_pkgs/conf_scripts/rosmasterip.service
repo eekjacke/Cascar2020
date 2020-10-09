@@ -1,0 +1,9 @@
+[Unit]
+Description=Python script to reply with ROS MASTER IP for broadcast message
+
+[Service]
+WorkingDirectory=/home/<username>/cascar_ws/src/cascar_pkgs/conf_scripts
+ExecStart=/usr/bin/python3 rosmasterip.py
+
+[Install]
+WantedBy=multi-user.target
