@@ -1,3 +1,5 @@
+import numpy as np
+
 def state_transition(x, world, mp, tol = 10**-5):
     state_i = world.st_sp[:, x]
     theta_i = state_i[2]

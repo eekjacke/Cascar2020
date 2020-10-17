@@ -90,7 +90,7 @@ def state_space_from_lattice(lattice):
 
 def obstacle_check(x, y, x_obst, y_obst):
     for ii in range(x_obst.shape[0]):
-        if (x > x_obst[ii, 0] and x < x_obst[ii, 1]) and \
-           (y > y_obst[ii, 0] and y < y_obst[ii, 1]):
+        if (x+0.2 > x_obst[ii, 0] and x-0.2 < x_obst[ii, 1]) and \
+           (y+0.3 > y_obst[ii, 0] and y-0.3 < y_obst[ii, 1]):
             return True
     return False
