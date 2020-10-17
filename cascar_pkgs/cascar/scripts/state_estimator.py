@@ -152,15 +152,17 @@ class StateEstimator:
         yM = pose_q.y
         
         """ Uncomment to get velocity data """
-#         vel_q = data.twist.twist
-#         vx = vel_q.linear.x
-#         vy = vel_q.linear.y
-#         vM = sym.sqrt(vx*vx + vy*vy)
-#         wM = vel_q.angular.z
+        vel_q = data.twist.twist
+        vx = vel_q.linear.x
+        vy = vel_q.linear.y
+        vM = sym.sqrt(vx*vx + vy*vy)
+        wM = vel_q.angular.z
+        self.v_in = vM
+        self.w_in = wM
         
         ori_q = data.pose.pose.orientation
         ori_list = [ori_q.x, ori_q.y, ori_q.z, ori_q.w]
-        (_, _, thM) = tf.transformations.euler_from_quaternion(ori_list)
+        (thM, _, _) = tf.transformations.euler_from_quaternion(ori_list)
 
         if not self.pose_initialized:
             self.reinit_pose([xM, yM, thM])
