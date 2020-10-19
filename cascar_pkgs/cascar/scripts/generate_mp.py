@@ -14,10 +14,13 @@ else:
     # Define the initial states and desired goal states for the motion
     # primitives
     theta_init = np.array([0, np.pi/4, np.pi/2, 3*np.pi/4, np.pi, -3*np.pi/4, -np.pi/2, -np.pi/4])
-
-    x_vec = 0.4*np.array([3, 3, 2, 3, 3, 3, 3, 3, 1, 3, 3, 3, 3, 3, 2, 3, 3])
-    y_vec = 0.4*np.array([3, 2, 2, 2, 1, 1, 1, 1, 0, -1, -1, -1, -1, -2, -2, -2, -3])
-    th_vec = np.array([np.pi/4, 0, np.pi/4, np.pi/2, 0, np.pi/4, np.pi/2, 3*np.pi/4, 0, -3*np.pi/4, -np.pi/2, -np.pi/4, 0, -np.pi/2, -np.pi/4, 0, -np.pi/4])
+    grid_size = 0.25
+    # x_vec = 0.4*np.array([3, 3, 2, 3, 3, 3, 3, 3, 1, 3, 3, 3, 3, 3, 2, 3, 3])
+    # y_vec = 0.4*np.array([3, 2, 2, 2, 1, 1, 1, 1, 0, -1, -1, -1, -1, -2, -2, -2, -3])
+    # th_vec = np.array([np.pi/4, 0, np.pi/4, np.pi/2, 0, np.pi/4, np.pi/2, 3*np.pi/4, 0, -3*np.pi/4, -np.pi/2, -np.pi/4, 0, -np.pi/2, -np.pi/4, 0, -np.pi/4])
+    x_vec = grid_size*np.array([1, 2, 3, 2, 3, 2, 2])
+    y_vec = grid_size*np.array([0, 2, 1, -2, -1, 1, -1])
+    th_vec = np.array([0, np.pi/2, 0, -np.pi/2, 0, np.pi/4, -np.pi/4])
     lattice = np.column_stack((x_vec, y_vec, th_vec))
 
 

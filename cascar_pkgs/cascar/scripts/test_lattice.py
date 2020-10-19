@@ -10,18 +10,19 @@ from seaborn import despine
 import numpy as np
 
 m = MotionPrimitives("mprims.pickle")
-
-xx = np.arange(-4, 4, 0.4)
-yy = np.arange(-4, 4, 0.4)
+grid_size = 0.25
+xx = np.arange(-4, 4, grid_size)
+yy = np.arange(-4, 4, grid_size)
 th = np.array([0,np.pi/4, np.pi/2, 3*np.pi/4, np.pi, -3*np.pi/4, -np.pi/2, -np.pi/4])
 
 world = BoxWorld((xx, yy, th))
 
-world.add_box(0, 0, 2, 2)
-world.add_box(-2, -2, 5, 4)
+world.add_box(-2, 1, 4, 1)
+world.add_box(-2, -2, 1, 4)
+world.add_box(-2, -2, 6, 1)
 
 start = [-3, -3, 0]
-goal = [3, 3, np.pi/2]
+goal = [0, 0, -3*np.pi/4]
 
 mission = {'start': {'id': np.argmin(np.sum((world.st_sp-np.array(start)[:,None])**2,axis = 0))},
            'goal': {'id': np.argmin(np.sum((world.st_sp-np.array(goal)[:,None])**2,axis = 0))}}
