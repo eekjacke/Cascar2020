@@ -11,10 +11,10 @@ def lattice_planner(num_nodes, mission, f_next, heuristic):
 
     startNode = mission['start']['id']
     goalNode = mission['goal']['id']
-
     q = PriorityQueue()
     q.insert(cost_to_come[startNode] + heuristic(startNode, goalNode), startNode)
     foundPlan = False
+
 
     while not q.IsEmpty():
         priority, x = q.pop() #priority temp variable

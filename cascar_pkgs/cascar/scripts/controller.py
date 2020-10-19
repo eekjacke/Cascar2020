@@ -12,6 +12,7 @@ import numpy as np
 from nav_msgs.msg import Odometry
 from cascar.msg import CarCommand
 import tf
+from plan_path import plan_path
 
 def odom_callback(data,w):
     quat=np.array([data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z,data.pose.pose.orientation.w])
@@ -22,36 +23,41 @@ def odom_callback(data,w):
     w['y'] = data.pose.pose.position.y
     w['yaw'] = euler[2]
     w['v'] = v
-      
+
 def run_mpc(max_vel):
-        
-    # Create MPC-controller
-    p = np.array([[0,0],[1,0],[2,0],[3,0]]) #Path-points
+
+    # Init node
+    rospy.init_node('listener', anonymous=True)
+    pub = rospy.Publisher('car_command', CarCommand, queue_size=1) # create object to publish commands
+    w = {'x': None, 'y': None, 'yaw':None, 'v':None} # Create object with car states
+
+    rospy.Subscriber("odom", Odometry, odom_callback, callback_args=w)
+
+    rate = rospy.Rate(10) # desired rate in Hz
+#    rate.sleep()
+
+# Create MPC-controller
+    start = [w['x'], w['y'], w['yaw']]
+    goal = [0, 0, 0]
+    boxes = [[-2,-2,6,1],[-2,-2,1,4],[-2,1,4,1]]
+    p = plan_path(start, goal, boxes) #Path-points
     ref_path = SplinePath(p) # Create splinepath
-    
+    print(ref_path)
+
     # Controller parameters
     opts = {
-        'h_p': 10, 
+        'h_p': 10,
         'gamma_d': 1,
         'gamma_theta': 1,
         'gamma_u': 1,
         'L': 0.275, # Wheel base
         'steer_limit': np.pi/6  # Nominally, use the same in the car
     }
-    
+
     #dt = 0.1 # Sample rate
-    #goal_tol = 0.1 # Goal tolerance 
+    #goal_tol = 0.1 # Goal tolerance
     mpc=ModelPredictiveControl.ModelPredictiveController(controller_params=opts, path=ref_path, goal_tol=0.006*max_vel, dt=0.1)
-    
-    # Init node
-    rospy.init_node('listener', anonymous=True)
-    pub = rospy.Publisher('car_command', CarCommand, queue_size=1) # create object to publish commands
-    w = {'x': None, 'y': None, 'yaw':None, 'v':None} # Create object with car states
-    
-    rospy.Subscriber("odom", Odometry, odom_callback, callback_args=w)
-    
-    rate = rospy.Rate(10) # desired rate in Hz
-#    rate.sleep()
+
     while not rospy.is_shutdown():
         if w['x']!=None:
             print(w)
@@ -60,11 +66,11 @@ def run_mpc(max_vel):
             u[0]=100*6/np.pi*u[0]
             print("u_steer är %d \n" % u[0])
             print("u_acc är %d \n" % u[1])
-        
+
             msg = CarCommand() # create a message of the proper format
-            
+
             if u[1]==0:
-                
+
                 msg.velocity = float(max_vel) # from -100 to 100
                 msg.steer = float(u[0]) # from -100 to 100
             else:
@@ -76,7 +82,7 @@ def run_mpc(max_vel):
             rate.sleep()
 
 
-def controller(x,y,yaw,v,mpc): 
+def controller(x,y,yaw,v,mpc):
     # Import data from visionen
     w=np.array([x, y, yaw, v])
 #    w=np.array([-1,0,0,2])
@@ -84,7 +90,7 @@ def controller(x,y,yaw,v,mpc):
     if mpc.run(w):
         u=mpc.u(w)
     else:
-        u=np.array([0,1]) 
+        u=np.array([0,1])
     return u
 
 if __name__ == '__main__':
@@ -94,4 +100,3 @@ if __name__ == '__main__':
 
     except rospy.ROSInterruptException:
         pass
-    
