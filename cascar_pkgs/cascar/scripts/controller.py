@@ -24,21 +24,38 @@ def odom_callback(data,w):
     w['yaw'] = euler[2]
     w['v'] = v
 
+def fetch_goal(data, goal_obj):
+    quat = np.array([
+        data.pose.orientation.x,
+        data.pose.orientation.y,
+        data.pose.orientation.z,
+        data.pose.orientation.w
+    ])
+    euler = tf.transformations.euler_from_quaternion(quat)
+    goal_obj['x'] = data.pose.position.x
+    goal_obj['y'] = data.pose.position.y
+    goal_obj['yaw'] = euler[2]
+
 def run_mpc(max_vel):
 
     # Init node
     rospy.init_node('listener', anonymous=True)
     pub = rospy.Publisher('car_command', CarCommand, queue_size=1) # create object to publish commands
     w = {'x': None, 'y': None, 'yaw':None, 'v':None} # Create object with car states
+    goal_obj = {'x': None, 'y': None, 'yaw':None}
 
     rospy.Subscriber("odom", Odometry, odom_callback, callback_args=w)
+    rospy.Subscriber("controller", Odometry, fetch_goal, callback_args=goal_obj)
 
     rate = rospy.Rate(10) # desired rate in Hz
 #    rate.sleep()
 
+    while goal_obj['w'] == None:
+        pass
+
 # Create MPC-controller
     start = [w['x'], w['y'], w['yaw']]
-    goal = [0, 0, 0]
+    goal = [goal_obj['x'], goal_obj['y'], goal_obj['yaw']]
     boxes = [[-2,-2,6,1],[-2,-2,1,4],[-2,1,4,1]]
     p = plan_path(start, goal, boxes) #Path-points
     ref_path = SplinePath(p) # Create splinepath
