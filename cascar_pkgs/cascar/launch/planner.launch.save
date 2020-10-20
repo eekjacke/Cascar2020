@@ -4,7 +4,8 @@
 
 <launch>
   <node pkg="tf" type="static_transform_publisher" name="path_pub" args="0 0 0 0 0 0 pather map 100" />
-  <node pkg="tf" type="static_transform_publisher" name="pat_testh_pub" args="0 0 0 0 0 0 pather_test map 100" />
+    pub_path = rospy.Publisher('pather', Path, queue_size=10) # create object to publish path to UI
+
   <node pkg="tf" type="static_transform_publisher" name="obst1_pub" args="0 0 0 0 0 0 obst1 map 100" />
   <node pkg="tf" type="static_transform_publisher" name="obst2_pub" args="0 0 0 0 0 0 obst2 map 100" />
   <node name="controller" pkg="cascar"  type="controller.py"/>

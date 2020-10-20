@@ -11,11 +11,13 @@ from splinepath import SplinePath
 import numpy as np
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import Path
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Pose, Polygon, Point32
+from geometry_msgs.msg import PoseStamped, PolygonStamped
 from cascar.msg import CarCommand
 import tf
 from plan_path import plan_path
+import time
+import copy
 
 def odom_callback(data,w):
     quat=np.array([data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z,data.pose.pose.orientation.w])
@@ -40,7 +42,7 @@ def fetch_goal(data, goal_obj):
     goal_obj['yaw'] = euler[2]
     print(goal_obj)
 
-def generate_msg(path_points,pub):
+def visualise_path(path_points,pub):
     path = list()
     for ii in range(len(path_points) - 1):
         loc = Pose()
@@ -62,12 +64,53 @@ def generate_msg(path_points,pub):
 
     pub.publish(path_msg)
 
+def visualise_obst(obst,pub):
+    obst_points = [{'x':obst[0],
+                'y':obst[1],
+                'z': 0},
+                {'x':obst[0]+obst[2],
+                'y':obst[1],
+                'z': 0},
+                 {'x':obst[0]+obst[2],
+                'y':obst[1]+obst[3],
+                'z': 0},
+                {'x':obst[0],
+                'y':obst[1]+obst[3],
+                'z': 0},
+                 {'x':obst[0],
+                'y':obst[1],
+                'z': 0}]
+    
+    point_list = list()
+    point = Point32()
+    for points in obst_points:
+        point.x=points['x']
+        point.y=points['y']
+        point.z=points['z']
+        point_list.append(copy.copy(point))
+
+        
+        
+    obst_msg = PolygonStamped()
+    poly = Polygon()
+    poly.points = point_list
+    
+    obst_msg.header.frame_id = "obst1"
+    obst_msg.polygon = poly
+    
+    pub.publish(obst_msg)
+
 def run_mpc(max_vel):
 
     # Init node
     rospy.init_node('listener', anonymous=True)
     pub = rospy.Publisher('car_command', CarCommand, queue_size=1) # create object to publish commands to car
-    pub_path = rospy.Publisher('pather', Path, queue_size=10) # create object to publish commands to UI
+    pub_path = rospy.Publisher('pather', Path, queue_size=10) # create object to publish path to UI
+    pub_path = rospy.Publisher('pather_test', Path, queue_size=10) # create object to publish path to UI
+
+    pub_obst1 = rospy.Publisher('obst1', PolygonStamped, queue_size=10) # create object to publish obst1 to UI
+    pub_obst2 = rospy.Publisher('obst2', PolygonStamped, queue_size=10) # create object to publish obst2 to UI
+
 
     w = {'x': None, 'y': None, 'yaw':None, 'v':None} # Create object with car states
     goal_obj = {'x': None, 'y': None, 'yaw':None}
@@ -76,7 +119,13 @@ def run_mpc(max_vel):
     rospy.Subscriber("move_base_simple/goal", PoseStamped, fetch_goal, callback_args=goal_obj)
 
     rate = rospy.Rate(10) # desired rate in Hz
-#    rate.sleep()
+    time.sleep(1)
+ 
+    boxes = [[-2,-2,6,1],[-2,-2,1,4]]#,[-2,1,4,1]]
+    
+    visualise_obst(boxes[0],pub_obst1)
+#    visualise_obst(boxes[1],pub_obst2)
+
 
     while goal_obj['x'] == None:
         print("Set the goal point")
@@ -87,12 +136,16 @@ def run_mpc(max_vel):
     start = [-3, -3, 0]
     goal = [goal_obj['x'], goal_obj['y'], goal_obj['yaw']]
 #    goal = [0, 0, -np.pi]
-    boxes = [[-2,-2,6,1],[-2,-2,1,4],[-2,1,4,1]]
-    boxes = []
+#    boxes = []
+
     p = plan_path(start, goal, boxes) #Path-points
     ref_path = SplinePath(p[::5]) # Create splinepath
 
-    generate_msg(p,pub_path)
+    visualise_path(p,pub_path)
+    
+
+    
+    
 
     # Controller parameters
     opts = {
