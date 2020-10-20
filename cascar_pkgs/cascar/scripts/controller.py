@@ -10,6 +10,7 @@ import ModelPredictiveControl
 from splinepath import SplinePath
 import numpy as np
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped
 from cascar.msg import CarCommand
 import tf
 from plan_path import plan_path
@@ -35,6 +36,7 @@ def fetch_goal(data, goal_obj):
     goal_obj['x'] = data.pose.position.x
     goal_obj['y'] = data.pose.position.y
     goal_obj['yaw'] = euler[2]
+    print(goal_obj)
 
 def run_mpc(max_vel):
 
@@ -45,13 +47,14 @@ def run_mpc(max_vel):
     goal_obj = {'x': None, 'y': None, 'yaw':None}
 
     rospy.Subscriber("odom", Odometry, odom_callback, callback_args=w)
-    rospy.Subscriber("controller", Odometry, fetch_goal, callback_args=goal_obj)
+    rospy.Subscriber("move_base_simple/goal", PoseStamped, fetch_goal, callback_args=goal_obj)
 
     rate = rospy.Rate(10) # desired rate in Hz
 #    rate.sleep()
 
-    while goal_obj['w'] == None:
-        pass
+    while goal_obj['x'] == None:
+        print("Set the goal point")
+        rate.sleep()
 
 # Create MPC-controller
     start = [w['x'], w['y'], w['yaw']]

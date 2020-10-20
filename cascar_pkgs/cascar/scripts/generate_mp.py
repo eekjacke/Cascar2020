@@ -2,7 +2,7 @@ import os
 import numpy as np
 from motion_primitives import MotionPrimitives
 import matplotlib.pyplot as plt
-from seaborn import despine
+#from seaborn import despine
 
 file_name = 'mprims.pickle'
 if os.path.exists(file_name):
