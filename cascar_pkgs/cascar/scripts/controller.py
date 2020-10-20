@@ -11,6 +11,7 @@ from splinepath import SplinePath
 import numpy as np
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import Path
+from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseStamped
 from cascar.msg import CarCommand
 import tf
@@ -39,6 +40,28 @@ def fetch_goal(data, goal_obj):
     goal_obj['yaw'] = euler[2]
     print(goal_obj)
 
+def generate_msg(self):
+    path = list()
+    for ii in range(len(self) - 1):
+        loc = Pose()
+        loc.position.x = self[ii, 0]
+        loc.position.y = self[ii, 1]
+        loc.position.z = 0
+        path.append(loc)
+
+    pose_list = list()
+    path_msg = Path()
+
+    path_msg.header.frame_id = "pather"
+
+    for loc in path:
+        pose = PoseStamped()
+        pose.pose = loc
+        pose_list.append(pose)
+        path_msg.poses.append(pose)
+
+    self.pub_path.publish(path_msg)
+
 def run_mpc(max_vel):
 
     # Init node
@@ -58,13 +81,16 @@ def run_mpc(max_vel):
         rate.sleep()
 
 # Create MPC-controller
-    start = [w['x'], w['y'], w['yaw']]
-    goal = [goal_obj['x'], goal_obj['y'], goal_obj['yaw']]
-    boxes = [[-2,-2,6,1],[-2,-2,1,4],[-2,1,4,1]]
+    # start = [w['x'], w['y'], w['yaw']]
+    start = [-3, -3, 0]
+    # goal = [goal_obj['x'], goal_obj['y'], goal_obj['yaw']]
+    goal = [3, -3, 0]
+    # boxes = [[-2,-2,6,1],[-2,-2,1,4],[-2,1,4,1]]
+    boxes = []
     p = plan_path(start, goal, boxes) #Path-points
-    ref_path = SplinePath(p) # Create splinepath
+    ref_path = SplinePath(p[::5]) # Create splinepath
 
-    rospy.Publisher('/path', p, queue_size = 10)
+    p.generate_msg()
 
     # Controller parameters
     opts = {

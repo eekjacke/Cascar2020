@@ -7,7 +7,7 @@ import numpy as np
 import sys
 
 def plan_path(start, goal, boxes):
-    m = MotionPrimitives("cascar_ws/src/opcascar2020/cascar_pkgs/cascar/scripts/mprims.pickle")
+    m = MotionPrimitives("/home/fabian/git/cascar_ws/src/opcascar2020/cascar_pkgs/cascar/scripts/mprims.pickle")
     grid_size = 0.25
     xx = np.arange(-4, 4, grid_size)
     yy = np.arange(-4, 4, grid_size)

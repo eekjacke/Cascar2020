@@ -3,6 +3,7 @@
 -->
 
 <launch>
+  <node pkg="tf" type="static_transform_publisher" name="path2map" args="0 0 0 0 0 0 pather map 100" />
   <node name="controller" pkg="cascar"  type="controller.py"/>
   <node pkg="rviz" type="rviz" name="rviz" args="-d $(find cascar)/rviz/pather.rviz"/>
 </launch>
