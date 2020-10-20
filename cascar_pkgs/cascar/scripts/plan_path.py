@@ -5,6 +5,7 @@ from cost_to_go import cost_to_go
 from state_transition import state_transition
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
 
 def plan_path(start, goal, boxes):
     m = MotionPrimitives("mprims.pickle")
@@ -29,7 +30,7 @@ def plan_path(start, goal, boxes):
 
     res = lattice_planner(n, mission, lambda x: state_transition(x, world, m), lambda x,xg: cost_to_go(world,x,xg))
     if np.size(res) == 0:
-        sys.exit('fuck off mate, impossible task, get your boxes/end-states under control.')
+        sys.exit('impossible task, get your boxes/end-states under control.')
 
     tot_path = np.array([])
     for j in range(len(res['control'])):
@@ -40,5 +41,9 @@ def plan_path(start, goal, boxes):
             tot_path = path
         else:
             tot_path = np.concatenate((tot_path, path), axis = 0)
-
+            
+    plt.figure(10, clear=True)
+    plt.plot(tot_path[:,0],tot_path[:,1])
+    world.draw()
+    plt.show()
     return tot_path[:,0:2]

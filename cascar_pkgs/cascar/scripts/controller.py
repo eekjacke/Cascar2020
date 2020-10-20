@@ -23,6 +23,23 @@ def odom_callback(data,w):
     w['y'] = data.pose.pose.position.y
     w['yaw'] = euler[2]
     w['v'] = v
+    
+def obst_1_callback(data,obst_1):
+    quat=np.array([data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z,data.pose.pose.orientation.w])
+    euler=tf.transformations.euler_from_quaternion(quat)
+    # Update obstacle states
+    obst_1['x'] = data.pose.pose.position.x
+    obst_1['y'] = data.pose.pose.position.y
+    obst_1['yaw'] = euler[2]
+    
+def obst_2_callback(data,obst_2):
+    quat=np.array([data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z,data.pose.pose.orientation.w])
+    euler=tf.transformations.euler_from_quaternion(quat)
+    # Update obstacle states
+    obst_2['x'] = data.pose.pose.position.x
+    obst_2['y'] = data.pose.pose.position.y
+    obst_2['yaw'] = euler[2]
+
 
 def run_mpc(max_vel):
 
@@ -30,6 +47,12 @@ def run_mpc(max_vel):
     rospy.init_node('listener', anonymous=True)
     pub = rospy.Publisher('car_command', CarCommand, queue_size=1) # create object to publish commands
     w = {'x': None, 'y': None, 'yaw':None, 'v':None} # Create object with car states
+    obst_1 = {'x': None, 'y': None, 'yaw':None} # Create object with obst_1 states
+    obst_2 = {'x': None, 'y': None, 'yaw':None} # Create object with obst_2 states
+    obst_size=[0.4,0.6] # Obstacle size
+
+    rospy.Subscriber('qualisys/obstacle_1/odom', Odometry, obst_1_callback, callback_args=obst_1)
+    rospy.Subscriber('qualisys/obstacle_2/odom', Odometry, obst_2_callback, callback_args=obst_2)
 
     rospy.Subscriber("odom", Odometry, odom_callback, callback_args=w)
 
@@ -37,17 +60,48 @@ def run_mpc(max_vel):
 #    rate.sleep()
 
 # Create MPC-controller
+    while w['x']==None or obst_1['x']==None or obst_2['x']==None:
+        print("Väntar på första mätdata")
+        #print(w)
+        rate.sleep()
     start = [w['x'], w['y'], w['yaw']]
     goal = [0, 0, 0]
-    boxes = [[-2,-2,6,1],[-2,-2,1,4],[-2,1,4,1]]
+    # Define help variables
+#    a1 = obst_size[1]*np.cos(obst_1['yaw']+np.pi/2)
+#    b1 = obst_size[1]*np.sin(obst_1['yaw']+np.pi/2)
+#    c1 = obst_size[0]*np.cos(obst_1['yaw'])
+#    d1 = obst_size[0]*np.cos(obst_1['yaw'])
+#    a2 = obst_size[1]*np.cos(obst_2['yaw']+np.pi/2)
+#    b2 = obst_size[1]*np.sin(obst_2['yaw']+np.pi/2)
+#    c2 = obst_size[0]*np.cos(obst_2['yaw'])
+#    d2 = obst_size[0]*np.cos(obst_2['yaw'])
+#    if -np.pi/2<obst_1['yaw']<0:
+#        box1 = [obst_1['x'],obst_1['y']-d1,a1+c1,b1+d1]
+#    elif 0<=obst_1['yaw']<np.pi/2:
+#        box1 = [obst_1['x']-a1,obst_1['y'],a1+c1,b1+d1]
+#    else :
+#        print("Bad angle on obstacle 1 you moron")
+#    
+#    if -np.pi/2<obst_2['yaw']<0:
+#        box2 = [obst_2['x'],obst_2['y']-d2,a2+c2,b2+d2]
+#    elif 0<=obst_2['yaw']<np.pi/2:
+#        box2 = [obst_2['x']-a2,obst_2['y'],a2+c2,b2+d2]
+#    else :
+#        print("Bad angle on obstacle 2 you moron")
+
+    box1 = [obst_1['x'],obst_1['y'],obst_size[0],obst_size[1]]
+    box2 = [obst_2['x'],obst_2['y'],obst_size[0],obst_size[1]]
+    boxes = [box1,box2] #Obstacles
     p = plan_path(start, goal, boxes) #Path-points
+    p=p[::5]
+    print(p)
     ref_path = SplinePath(p) # Create splinepath
-    print(ref_path)
+    # print(ref_path)
 
     # Controller parameters
     opts = {
         'h_p': 10,
-        'gamma_d': 1,
+        'gamma_d': 10,
         'gamma_theta': 1,
         'gamma_u': 1,
         'L': 0.275, # Wheel base
@@ -94,7 +148,7 @@ def controller(x,y,yaw,v,mpc):
     return u
 
 if __name__ == '__main__':
-    max_vel=100
+    max_vel=50
     try:
         run_mpc(max_vel)
 
