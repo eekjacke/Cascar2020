@@ -40,12 +40,12 @@ def fetch_goal(data, goal_obj):
     goal_obj['yaw'] = euler[2]
     print(goal_obj)
 
-def generate_msg(self):
+def generate_msg(path_points,pub):
     path = list()
-    for ii in range(len(self) - 1):
+    for ii in range(len(path_points) - 1):
         loc = Pose()
-        loc.position.x = self[ii, 0]
-        loc.position.y = self[ii, 1]
+        loc.position.x = path_points[ii, 0]
+        loc.position.y = path_points[ii, 1]
         loc.position.z = 0
         path.append(loc)
 
@@ -60,13 +60,15 @@ def generate_msg(self):
         pose_list.append(pose)
         path_msg.poses.append(pose)
 
-    self.pub_path.publish(path_msg)
+    pub.publish(path_msg)
 
 def run_mpc(max_vel):
 
     # Init node
     rospy.init_node('listener', anonymous=True)
-    pub = rospy.Publisher('car_command', CarCommand, queue_size=1) # create object to publish commands
+    pub = rospy.Publisher('car_command', CarCommand, queue_size=1) # create object to publish commands to car
+    pub_path = rospy.Publisher('pather', Path, queue_size=10) # create object to publish commands to UI
+
     w = {'x': None, 'y': None, 'yaw':None, 'v':None} # Create object with car states
     goal_obj = {'x': None, 'y': None, 'yaw':None}
 
@@ -83,14 +85,14 @@ def run_mpc(max_vel):
 # Create MPC-controller
     # start = [w['x'], w['y'], w['yaw']]
     start = [-3, -3, 0]
-    # goal = [goal_obj['x'], goal_obj['y'], goal_obj['yaw']]
-    goal = [3, -3, 0]
-    # boxes = [[-2,-2,6,1],[-2,-2,1,4],[-2,1,4,1]]
+    goal = [goal_obj['x'], goal_obj['y'], goal_obj['yaw']]
+#    goal = [0, 0, -np.pi]
+    boxes = [[-2,-2,6,1],[-2,-2,1,4],[-2,1,4,1]]
     boxes = []
     p = plan_path(start, goal, boxes) #Path-points
     ref_path = SplinePath(p[::5]) # Create splinepath
 
-    p.generate_msg()
+    generate_msg(p,pub_path)
 
     # Controller parameters
     opts = {
