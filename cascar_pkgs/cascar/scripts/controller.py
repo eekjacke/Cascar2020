@@ -10,6 +10,7 @@ import ModelPredictiveControl
 from splinepath import SplinePath
 import numpy as np
 from nav_msgs.msg import Odometry
+from nav_msgs.msg import Path
 from cascar.msg import CarCommand
 import tf
 from plan_path import plan_path
@@ -59,7 +60,8 @@ def run_mpc(max_vel):
     boxes = [[-2,-2,6,1],[-2,-2,1,4],[-2,1,4,1]]
     p = plan_path(start, goal, boxes) #Path-points
     ref_path = SplinePath(p) # Create splinepath
-    print(ref_path)
+
+    rospy.Publisher('/path', p, queue_size = 10)
 
     # Controller parameters
     opts = {
