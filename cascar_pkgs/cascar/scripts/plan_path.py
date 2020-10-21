@@ -8,7 +8,7 @@ import sys
 import matplotlib.pyplot as plt
 
 def plan_path(start, goal, boxes):
-    m = MotionPrimitives("mprims.pickle")
+    m = MotionPrimitives("/home/gustav/cascar_ws/src/opcascar2020/cascar_pkgs/cascar/scripts/mprims.pickle")
     grid_size = 0.25
     xx = np.arange(-4, 4, grid_size)
     yy = np.arange(-4, 4, grid_size)

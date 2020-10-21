@@ -10,9 +10,14 @@ import ModelPredictiveControl
 from splinepath import SplinePath
 import numpy as np
 from nav_msgs.msg import Odometry
+from nav_msgs.msg import Path
+from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseStamped
+from visualization_msgs.msg import Marker
 from cascar.msg import CarCommand
 import tf
 from plan_path import plan_path
+import time
 
 def odom_callback(data,w):
     quat=np.array([data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z,data.pose.pose.orientation.w])
@@ -41,11 +46,72 @@ def obst_2_callback(data,obst_2):
     obst_2['yaw'] = euler[2]
 
 
+def fetch_goal(data, goal_obj):
+    quat = np.array([
+        data.pose.orientation.x,
+        data.pose.orientation.y,
+        data.pose.orientation.z,
+        data.pose.orientation.w
+    ])
+    euler = tf.transformations.euler_from_quaternion(quat)
+    goal_obj['x'] = data.pose.position.x
+    goal_obj['y'] = data.pose.position.y
+    goal_obj['yaw'] = euler[2]
+    print(goal_obj)
+
+def visualise_path(path_points,pub):
+    path = list()
+    for ii in range(len(path_points) - 1):
+        loc = Pose()
+        loc.position.x = path_points[ii, 0]
+        loc.position.y = path_points[ii, 1]
+        loc.position.z = 0
+        path.append(loc)
+
+    pose_list = list()
+    path_msg = Path()
+
+    path_msg.header.frame_id = "pather"
+
+    for loc in path:
+        pose = PoseStamped()
+        pose.pose = loc
+        pose_list.append(pose)
+        path_msg.poses.append(pose)
+
+    pub.publish(path_msg)
+
+def visualise_obst(obst,pub):
+    marker = Marker()
+    marker.header.frame_id = "obst1"
+    marker.type = marker.CUBE
+    marker.action = marker.ADD
+    marker.pose.position.x = obst[0]+obst[2]/2
+    marker.pose.position.y = obst[1]+obst[3]/2
+    marker.pose.position.z = 0
+    marker.scale.x = obst[2]
+    marker.scale.y = obst[3]
+    marker.pose.orientation.w = 1
+    marker.scale.z = 0.4
+    marker.color.a = 1.0
+    marker.color.r = 1.0    
+    marker.color.g = 0.0
+    marker.color.b = 0.0
+    
+    pub.publish(marker)
+    
+
 def run_mpc(max_vel):
 
     # Init node
     rospy.init_node('listener', anonymous=True)
-    pub = rospy.Publisher('car_command', CarCommand, queue_size=1) # create object to publish commands
+    pub = rospy.Publisher('car_command', CarCommand, queue_size=1) # create object to publish commands to car
+    pub_path = rospy.Publisher('pather', Path, queue_size=10) # create object to publish path to UI
+    pub_car_path = rospy.Publisher('car_pather', Path, queue_size=10) # create object to publish car path to UI
+    pub_obst1 = rospy.Publisher('obst1', Marker, queue_size=10) # create object to publish obst1 to UI
+    pub_obst2 = rospy.Publisher('obst2', Marker, queue_size=10) # create object to publish obst2 to UI
+
+
     w = {'x': None, 'y': None, 'yaw':None, 'v':None} # Create object with car states
     obst_1 = {'x': None, 'y': None, 'yaw':None} # Create object with obst_1 states
     obst_2 = {'x': None, 'y': None, 'yaw':None} # Create object with obst_2 states
@@ -53,11 +119,15 @@ def run_mpc(max_vel):
 
     rospy.Subscriber('qualisys/obstacle_1/odom', Odometry, obst_1_callback, callback_args=obst_1)
     rospy.Subscriber('qualisys/obstacle_2/odom', Odometry, obst_2_callback, callback_args=obst_2)
-
+    goal_obj = {'x': None, 'y': None, 'yaw':None}
+    
+    
     rospy.Subscriber("odom", Odometry, odom_callback, callback_args=w)
+    rospy.Subscriber("move_base_simple/goal", PoseStamped, fetch_goal, callback_args=goal_obj)
 
     rate = rospy.Rate(10) # desired rate in Hz
-#    rate.sleep()
+    time.sleep(1)
+
 
 # Create MPC-controller
     while w['x']==None or obst_1['x']==None or obst_2['x']==None:
@@ -65,38 +135,24 @@ def run_mpc(max_vel):
         #print(w)
         rate.sleep()
     start = [w['x'], w['y'], w['yaw']]
-    goal = [0, 0, 0]
-    # Define help variables
-#    a1 = obst_size[1]*np.cos(obst_1['yaw']+np.pi/2)
-#    b1 = obst_size[1]*np.sin(obst_1['yaw']+np.pi/2)
-#    c1 = obst_size[0]*np.cos(obst_1['yaw'])
-#    d1 = obst_size[0]*np.cos(obst_1['yaw'])
-#    a2 = obst_size[1]*np.cos(obst_2['yaw']+np.pi/2)
-#    b2 = obst_size[1]*np.sin(obst_2['yaw']+np.pi/2)
-#    c2 = obst_size[0]*np.cos(obst_2['yaw'])
-#    d2 = obst_size[0]*np.cos(obst_2['yaw'])
-#    if -np.pi/2<obst_1['yaw']<0:
-#        box1 = [obst_1['x'],obst_1['y']-d1,a1+c1,b1+d1]
-#    elif 0<=obst_1['yaw']<np.pi/2:
-#        box1 = [obst_1['x']-a1,obst_1['y'],a1+c1,b1+d1]
-#    else :
-#        print("Bad angle on obstacle 1 you moron")
-#    
-#    if -np.pi/2<obst_2['yaw']<0:
-#        box2 = [obst_2['x'],obst_2['y']-d2,a2+c2,b2+d2]
-#    elif 0<=obst_2['yaw']<np.pi/2:
-#        box2 = [obst_2['x']-a2,obst_2['y'],a2+c2,b2+d2]
-#    else :
-#        print("Bad angle on obstacle 2 you moron")
-
     box1 = [obst_1['x'],obst_1['y'],obst_size[0],obst_size[1]]
     box2 = [obst_2['x'],obst_2['y'],obst_size[0],obst_size[1]]
+    
     boxes = [box1,box2] #Obstacles
+
+    visualise_obst(boxes[0],pub_obst1)
+    visualise_obst(boxes[1],pub_obst2)
+    
+    while goal_obj['x'] == None:
+        print("Set the goal point")
+        rate.sleep()
+    goal = [goal_obj['x'], goal_obj['y'], goal_obj['yaw']]
+    
     p = plan_path(start, goal, boxes) #Path-points
-    p=p[::5]
-    print(p)
-    ref_path = SplinePath(p) # Create splinepath
-    # print(ref_path)
+    ref_path = SplinePath(p[::5]) # Create splinepath
+    
+    visualise_path(p,pub_path)
+    
 
     # Controller parameters
     opts = {
@@ -112,9 +168,14 @@ def run_mpc(max_vel):
     #goal_tol = 0.1 # Goal tolerance
     mpc=ModelPredictiveControl.ModelPredictiveController(controller_params=opts, path=ref_path, goal_tol=0.006*max_vel, dt=0.1)
 
+    traj = np.array([])
     while not rospy.is_shutdown():
         if w['x']!=None:
             print(w)
+
+            np.append(traj, [[w['x'], w['y']]], axis=0)
+            visualise_path(traj, pub_car_path)
+            
             u=controller(w['x'],w['y'],w['yaw'],w['v'],mpc)
             # Convert angle
             u[0]=100*6/np.pi*u[0]

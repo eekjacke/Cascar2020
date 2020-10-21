@@ -19,7 +19,7 @@ print(["from", addr])
 ownip = data.decode().split(':')[1]
 
 username = getpass.getuser()
-file = open('/home/'+username+'/cascar_ws/src/cascar_pkgs/conf_scripts/envrosip.sh','wb')
+file = open('/home/'+username+'/cascar_ws/src/opcascar2020/cascar_pkgs/conf_scripts/envrosip.sh','wb')
 lines = [b'export ROS_IP='+ownip.encode()+b'\n',\
 b'export ROS_MASTER_URI=http://'+addr[0].encode()+b':11311/\n',\
 b'export ROS_MASTER_IP='+addr[0].encode()+b'\n']
