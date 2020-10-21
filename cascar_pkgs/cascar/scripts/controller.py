@@ -143,9 +143,14 @@ def run_mpc(max_vel):
     #goal_tol = 0.1 # Goal tolerance
     mpc=ModelPredictiveControl.ModelPredictiveController(controller_params=opts, path=ref_path, goal_tol=0.006*max_vel, dt=0.1)
 
+    traj = np.array([])
     while not rospy.is_shutdown():
         if w['x']!=None:
             print(w)
+
+            np.append(traj, [[w['x'], w['y']]], axis=0)
+            generate_msg(traj, pub_path)
+            
             u=controller(w['x'],w['y'],w['yaw'],w['v'],mpc)
             # Convert angle
             u[0]=100*6/np.pi*u[0]
