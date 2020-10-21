@@ -42,8 +42,8 @@ def plan_path(start, goal, boxes):
         else:
             tot_path = np.concatenate((tot_path, path), axis = 0)
             
-    plt.figure(10, clear=True)
-    plt.plot(tot_path[:,0],tot_path[:,1])
-    world.draw()
-    plt.show()
+#    plt.figure(10, clear=True)
+#    plt.plot(tot_path[:,0],tot_path[:,1])
+#    world.draw()
+#    plt.show()
     return tot_path[:,0:2]

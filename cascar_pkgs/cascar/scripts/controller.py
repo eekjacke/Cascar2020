@@ -142,24 +142,24 @@ def run_mpc(max_vel):
 
     visualise_obst(boxes[0],pub_obst1)
     visualise_obst(boxes[1],pub_obst2)
-    
+#    boxes = []
     while goal_obj['x'] == None:
         print("Set the goal point")
         rate.sleep()
     goal = [goal_obj['x'], goal_obj['y'], goal_obj['yaw']]
     
     p = plan_path(start, goal, boxes) #Path-points
-    ref_path = SplinePath(p[::5]) # Create splinepath
+    ref_path = SplinePath(p[::3]) # Create splinepath
     
     visualise_path(p,pub_path)
     
 
     # Controller parameters
     opts = {
-        'h_p': 10,
-        'gamma_d': 10,
+        'h_p': 4,
+        'gamma_d': 6,
         'gamma_theta': 1,
-        'gamma_u': 1,
+        'gamma_u': 0.3,
         'L': 0.275, # Wheel base
         'steer_limit': np.pi/6  # Nominally, use the same in the car
     }
@@ -168,12 +168,12 @@ def run_mpc(max_vel):
     #goal_tol = 0.1 # Goal tolerance
     mpc=ModelPredictiveControl.ModelPredictiveController(controller_params=opts, path=ref_path, goal_tol=0.006*max_vel, dt=0.1)
 
-    traj = np.array([])
+    traj = np.array([[w['x'], w['y']]])
     while not rospy.is_shutdown():
         if w['x']!=None:
             print(w)
 
-            np.append(traj, [[w['x'], w['y']]], axis=0)
+            traj = np.append(traj, [[w['x'], w['y']]], axis=0)
             visualise_path(traj, pub_car_path)
             
             u=controller(w['x'],w['y'],w['yaw'],w['v'],mpc)
@@ -189,9 +189,9 @@ def run_mpc(max_vel):
                 msg.velocity = float(max_vel) # from -100 to 100
                 msg.steer = float(u[0]) # from -100 to 100
             else:
-                print("Är framme")
-                msg.velocity = float(0) # from -100 to 100
+                msg.velocity = float(-30) # from -100 to 100
                 msg.steer = float(0) # from -100 to 100
+                run_mpc(max_vel)
             print("Skickar meddelande")
             pub.publish(msg) # publish the message, runs the car for about 1 second
             rate.sleep()
@@ -209,7 +209,7 @@ def controller(x,y,yaw,v,mpc):
     return u
 
 if __name__ == '__main__':
-    max_vel=50
+    max_vel=70
     try:
         run_mpc(max_vel)
 
