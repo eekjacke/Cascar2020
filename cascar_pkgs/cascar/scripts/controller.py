@@ -90,6 +90,7 @@ def run_mpc(max_vel):
     rospy.init_node('listener', anonymous=True)
     pub = rospy.Publisher('car_command', CarCommand, queue_size=1) # create object to publish commands to car
     pub_path = rospy.Publisher('pather', Path, queue_size=10) # create object to publish path to UI
+    pub_car_path = rospy.Publisher('car_pather', Path, queue_size=10) # create object to publish car path to UI
     pub_obst1 = rospy.Publisher('obst1', Marker, queue_size=10) # create object to publish obst1 to UI
     pub_obst2 = rospy.Publisher('obst2', Marker, queue_size=10) # create object to publish obst2 to UI
 
@@ -149,7 +150,7 @@ def run_mpc(max_vel):
             print(w)
 
             np.append(traj, [[w['x'], w['y']]], axis=0)
-            generate_msg(traj, pub_path)
+            visualise_path(traj, pub_car_path)
             
             u=controller(w['x'],w['y'],w['yaw'],w['v'],mpc)
             # Convert angle
