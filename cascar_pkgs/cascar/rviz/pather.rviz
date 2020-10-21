@@ -8,9 +8,8 @@ Panels:
         - /Status1
         - /Path1
         - /TF1
-        - /Pose2/Status1
-        - /Polygon1
-        - /Polygon2
+        - /Marker1
+        - /Marker2
       Splitter Ratio: 0.5
     Tree Height: 689
   - Class: rviz/Selection
@@ -90,12 +89,6 @@ Visualization Manager:
           Value: true
         obst1:
           Value: true
-        obst2:
-          Value: true
-        pather:
-          Value: true
-        pather_test:
-          Value: true
       Marker Alpha: 1
       Marker Scale: 2
       Name: TF
@@ -104,12 +97,6 @@ Visualization Manager:
       Show Names: false
       Tree:
         obst1:
-          {}
-        obst2:
-          {}
-        pather:
-          {}
-        pather_test:
           map:
             {}
       Update Interval: 0
@@ -146,23 +133,21 @@ Visualization Manager:
       Topic: /steer_angle
       Unreliable: false
       Value: true
-    - Alpha: 1
-      Class: rviz/Polygon
-      Color: 239; 41; 41
+    - Class: rviz/Marker
       Enabled: true
-      Name: Polygon
-      Queue Size: 10
-      Topic: /obst1
-      Unreliable: false
+      Marker Topic: /obst1
+      Name: Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
       Value: true
-    - Alpha: 1
-      Class: rviz/Polygon
-      Color: 239; 41; 41
+    - Class: rviz/Marker
       Enabled: true
-      Name: Polygon
-      Queue Size: 10
-      Topic: /obst2
-      Unreliable: false
+      Marker Topic: /obst2
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -192,7 +177,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 18.47920036315918
+      Distance: 14.31029224395752
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -208,9 +193,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5797969102859497
+      Pitch: 0.5397972464561462
       Target Frame: <Fixed Frame>
-      Yaw: 4.190401077270508
+      Yaw: 3.9704012870788574
     Saved: ~
 Window Geometry:
   Displays:

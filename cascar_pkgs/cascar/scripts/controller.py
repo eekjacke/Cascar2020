@@ -11,13 +11,13 @@ from splinepath import SplinePath
 import numpy as np
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import Path
-from geometry_msgs.msg import Pose, Polygon, Point32
-from geometry_msgs.msg import PoseStamped, PolygonStamped
+from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseStamped
+from visualization_msgs.msg import Marker
 from cascar.msg import CarCommand
 import tf
 from plan_path import plan_path
 import time
-import copy
 
 def odom_callback(data,w):
     quat=np.array([data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z,data.pose.pose.orientation.w])
@@ -65,40 +65,24 @@ def visualise_path(path_points,pub):
     pub.publish(path_msg)
 
 def visualise_obst(obst,pub):
-    obst_points = [{'x':obst[0],
-                'y':obst[1],
-                'z': 0},
-                {'x':obst[0]+obst[2],
-                'y':obst[1],
-                'z': 0},
-                 {'x':obst[0]+obst[2],
-                'y':obst[1]+obst[3],
-                'z': 0},
-                {'x':obst[0],
-                'y':obst[1]+obst[3],
-                'z': 0},
-                 {'x':obst[0],
-                'y':obst[1],
-                'z': 0}]
+    marker = Marker()
+    marker.header.frame_id = "obst1"
+    marker.type = marker.CUBE
+    marker.action = marker.ADD
+    marker.pose.position.x = obst[0]+obst[2]/2
+    marker.pose.position.y = obst[1]+obst[3]/2
+    marker.pose.position.z = 0
+    marker.scale.x = obst[2]
+    marker.scale.y = obst[3]
+    marker.pose.orientation.w = 1
+    marker.scale.z = 0.4
+    marker.color.a = 1.0
+    marker.color.r = 1.0    
+    marker.color.g = 0.0
+    marker.color.b = 0.0
     
-    point_list = list()
-    point = Point32()
-    for points in obst_points:
-        point.x=points['x']
-        point.y=points['y']
-        point.z=points['z']
-        point_list.append(copy.copy(point))
-
-        
-        
-    obst_msg = PolygonStamped()
-    poly = Polygon()
-    poly.points = point_list
+    pub.publish(marker)
     
-    obst_msg.header.frame_id = "obst1"
-    obst_msg.polygon = poly
-    
-    pub.publish(obst_msg)
 
 def run_mpc(max_vel):
 
@@ -106,10 +90,8 @@ def run_mpc(max_vel):
     rospy.init_node('listener', anonymous=True)
     pub = rospy.Publisher('car_command', CarCommand, queue_size=1) # create object to publish commands to car
     pub_path = rospy.Publisher('pather', Path, queue_size=10) # create object to publish path to UI
-    pub_path = rospy.Publisher('pather_test', Path, queue_size=10) # create object to publish path to UI
-
-    pub_obst1 = rospy.Publisher('obst1', PolygonStamped, queue_size=10) # create object to publish obst1 to UI
-    pub_obst2 = rospy.Publisher('obst2', PolygonStamped, queue_size=10) # create object to publish obst2 to UI
+    pub_obst1 = rospy.Publisher('obst1', Marker, queue_size=10) # create object to publish obst1 to UI
+    pub_obst2 = rospy.Publisher('obst2', Marker, queue_size=10) # create object to publish obst2 to UI
 
 
     w = {'x': None, 'y': None, 'yaw':None, 'v':None} # Create object with car states
@@ -124,7 +106,7 @@ def run_mpc(max_vel):
     boxes = [[-2,-2,6,1],[-2,-2,1,4]]#,[-2,1,4,1]]
     
     visualise_obst(boxes[0],pub_obst1)
-#    visualise_obst(boxes[1],pub_obst2)
+    visualise_obst(boxes[1],pub_obst2)
 
 
     while goal_obj['x'] == None:
